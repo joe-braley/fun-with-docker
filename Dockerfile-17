@@ -1,0 +1,29 @@
+FROM ubuntu:latest
+
+RUN apt-get -qq update && \
+    apt-get -qq upgrade && \
+    apt-get -y install git perl curl wget ant ant-contrib build-essential && \
+    wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
+    dpkg -i packages-microsoft-prod.deb && \
+    apt-get -qq update && \
+    apt-get -qq install msopenjdk-17 && \
+    apt-get -qq purge apt-transport-https wget && \
+    apt-get -qq autoremove --purge && \
+    rm -rf /var/lib/apt/lists/* && \
+    echo java -Xshare:dump && \
+    java -Xshare:dump 
+
+ENV TEST_JDK_HOME="/usr"
+ENV USE_TESTENV_PROPERTIES=true
+ENV JDK_VERSION=17
+ENV BUILD_LIST=openjdk
+ENV PARALLEL_OPTIONS="TEST=extended TEST_TIME=180 NUM_MACHINES="
+
+RUN git clone https://github.com/adoptium/aqa-tests.git && \
+    cd aqa-tests && \
+    ./get.sh && \
+    cd TKG && \
+    make genParallelList $PARALLEL_OPTIONS && \
+    cd .. && \
+    iconv -f iso8859-1 -t ibm-1047 TKG/parallelList.mk > TKG/parallelList.mk.ebcdic; rm TKG/parallelList.mk; mv TKG/parallelList.mk.ebcdic TKG/parallelList.mk && \
+    ./compile.sh
