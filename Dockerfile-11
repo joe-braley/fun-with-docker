@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ${IMAGE}:${TAG}
 
 RUN apt-get -qq update && \
     apt-get -qq upgrade && \
